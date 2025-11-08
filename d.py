@@ -6,6 +6,8 @@ from collections import Counter
 from datetime import datetime
 import typer
 
+app = typer.Typer(help="CLI de ITjobs")
+
 skills_list = [
         'Python', 'JavaScript', 'Java', 'C#', 'C++', 'PHP', 'Ruby', 'Go', 'Swift', 'Kotlin',
         'SQL', 'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Elasticsearch',
@@ -20,13 +22,19 @@ chave_api = "b0e317cc2b42bdde2c5d7bdd73db79c4"
 api_url = "https://www.itjobs.pt/api"
 
 # adicionar comando para poder adicionar mais skills 
-
-def add_skills_list(skill):
-    if skill.strip().lower() not in skills_list.lower():
+def add_skills_list(skill: str):
+    if not skill:
+        typer.echo("Nenhuma skill foi introduzida como argumento. Forneça uma skill")
+        return
+    if skill.lower() in [s.lower() for s in skills_list]:
+        typer.echo("Essa skill já existe na lista de skills")
+        return
+    else:
         skills_list.append(skill)
+        typer.echo(f"Skill {skill} adicionada com sucesso à lista de skills")
         return skills_list
     
-def retornar_por_data(data_inicial, data_final):
+def retornar_por_data(data_inicial : datetime, data_final : datetime):
     # pedir json
     # obter parâmetros
     try:
@@ -45,17 +53,17 @@ def retornar_por_data(data_inicial, data_final):
         
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"Erro ao fazer request à API: {e}")
+        typer.echo(f"Erro ao fazer request à API: {e}")
         return []
     
-def skills(data_inicial_skills, data_final_skills):
+def skills(data_inicial_skills : datetime, data_final_skills : datetime):
     # obter requests por data primeiro
     por_data = retornar_por_data(data_inicial_skills, data_final_skills)
     
     # apenas filtrar em descrições
     so_descricao = []
     if not por_data:
-        print("Não existem dados para fazer a contagem das skills")
+        typer.echo("Não existem dados para fazer a contagem das skills")
         return json.dumps([])
     
     for item in por_data:
@@ -83,7 +91,7 @@ def skills_multipalavra(data_inicial_skills, data_final_skills):
     por_data = retornar_por_data(data_inicial_skills, data_final_skills)
     
     if not por_data:
-        print("Não existem dados para fazer a contagem das skills")
+        typer.echo("Não existem dados para fazer a contagem das skills")
         return json.dumps([])
     
     # Extrair todas as descrições
@@ -111,7 +119,7 @@ def skills_multipalavra(data_inicial_skills, data_final_skills):
 
 
 
-def get_job(job_id):
+def get_job(job_id : int):
     url = "https://api.itjobs.pt/job/get.json"
     
     headers = {
@@ -126,12 +134,60 @@ def get_job(job_id):
     
     if response.status_code == 200:
         vaga = response.json()
-        print(f"{vaga['title']}")
-        print(f"{vaga['company']['name']}")
-        print(f"{vaga['locations'][0]['name']}")
-        print(f"{vaga['publishedAt']}")
-        print(f"https://www.itjobs.pt/job/{vaga['id']}")
+        typer.echo(f"{vaga['title']}")
+        typer.echo(f"{vaga['company']['name']}")
+        typer.echo(f"{vaga['locations'][0]['name']}")
+        typer.echo(f"{vaga['publishedAt']}")
+        typer.echo(f"https://www.itjobs.pt/job/{vaga['id']}")
     else:
-        print(f"Erro {response.status_code}")
+        typer.echo(f"Erro {response.status_code}")
 
-print(get_job(506525))
+#print(get_job(506525))
+
+# mostrar os comandos disponíveis
+def help():
+    typer.echo("""
+Comandos disponíveis:
+  add_skill <nome_skill>         - Adicionar skills para procurar posteriormente
+  skills <skills>         - Mostra os trabalhos com essa skill
+  get_job <int_job>        - Mostra as característica de um trabalho num índice específico
+  Exit                 - Sair do programa
+  Help                - Mostra os comandos disponíveis
+""")
+    
+def main():
+    typer.echo("CLI Iniciado")
+    while True:
+        comando = str(input(">>>").strip())
+        if comando:
+            partes = comando.split()
+            cmd = partes[0].lower()
+            args = partes[1:] # extrair todos os argumentos
+            
+            if cmd =="get_job":
+                typer.echo(f"A pesquisar informações acerda do trabalho com índice {args}")
+                print(get_job(args))
+                
+            elif cmd == "add_skill":
+                if args:
+                    add_skills_list(" ".join(args))
+                else:
+                    typer.echo("Uso: add_skill <nome_skill>")
+
+            elif cmd == "skills":
+                if len(args) == 2:
+                    print(skills(args[0], args[1]))
+                else:
+                    typer.echo("Uso: skills <data_inicial> <data_final>")
+                        
+            elif cmd =="exit":
+                typer.echo("O programa será encerrado")
+                break
+        else:
+            typer.echo("Comando não reconhecido")
+            help()      
+
+if __name__ == "__main__":
+    app()
+    main()          
+        
