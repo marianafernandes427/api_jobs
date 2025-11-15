@@ -99,6 +99,34 @@ def n_jobs(num: int, if_csv: bool):
     except Exception as e:
         typer.echo(f"Erro {e} ao tentar fazer o request")
         
+def search_jobs(empresa: str, localidade: str, num: int, if_csv: bool):
+    headers = {
+        'User-Agent': 'MyApp/1.0',
+        'Accept': 'application/json'
+    }
+    params = {
+        'api_key': chave_api,
+        'limit': num,
+        'page': 1,
+        'company': empresa,
+        'location': localidade,
+        'type': 'part-time'
+    }
+    try:
+        response = requests.get('https://api.itjobs.pt/job/list.json', params=params, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            jobs = data.get('results', [])[:num]
+            if not if_csv:
+                return jobs
+            else:
+                export_to_csv(jobs, "search_export.csv")
+                return []
+        else:
+            return []
+    except Exception as e:
+        typer.echo(f"Erro {e} ao tentar fazer o request")
+        return []
 
 def add_skills_list(skill: str):
     if not skill:
@@ -236,6 +264,11 @@ Comandos disponíveis:
 def list_jobs(num: int, csv: bool = typer.Option(False, "--csv", help="Exportar resultados para CSV")):
     """Listar N jobs ou exportar para CSV"""
     n_jobs(num, csv)
+
+@app.command()
+def search(empresa: str, localidade: str, num: int, csv: bool = typer.Option(False, "--csv", help="Exportar resultados para CSV")):
+    """Listar trabalhos part-time por empresa e localidade"""
+    search_jobs(empresa, localidade, num, csv)
 
 @app.command()
 def add_skill(skill: str):
