@@ -7,18 +7,31 @@ from datetime import datetime
 from typing import List, Optional
 import typer
 import csv
+import requests
+from bs4 import BeautifulSoup
 
 # Variáveis Globais
 # para não sobreescrever os header, chave api , link api 
 CONFIGS = {
     "API_KEY": "b0e317cc2b42bdde2c5d7bdd73db79c4",
     "BASE_URL": "https://api.itjobs.pt/job",
+    "SITE_URL" : "https://pt.teamlyzer.com/companies/",
     "MAX_RESULTS": 300,
+
     "HEADERS": {
         "User-Agent": "MyApp/1.0",
         "Accept": "application/json"
+    },
+
+    "HEADERS_SITE": {
+        "User-Agent": "Mozilla/5.0 (compatible; TeamlyzerScraper/1.0)"
     }
 }
+def ler_html(url):
+    response = requests.get(url, headers=CONFIGS["SITE_URL"])
+    soup = BeautifulSoup(response.text, "lxml") 
+    return soup
+soup = ler_html(CONFIGS["SITE_URL"])
 
 app = typer.Typer(help="CLI de ITjobs")
 # auxiliares
@@ -198,7 +211,16 @@ def get_job_id(job_id: int):
     tipos = encontrar_work_type(response.get("description", ""))
     typer.echo("Tipos de trabalho: " + ", ".join(tipos) if tipos else "Nenhum tipo encontrado.")
     
-
+def info_empresa( job_id):
+    res = get_job_id(job_id) 
+    if res: 
+        nome_empresa = res["company"]["name"]
+        nome_empresa.str.replace(" ", "-")
+        link =CONFIGS["SITE_URL"] + nome_empresa
+        ranking =  soup.find_all({"class": "text-center aa_rating __web-inspector-hide-shortcut__"}).text
+        if ranking:
+            typer.echo(f"Rating da empresa: {ranking}" )
+        
 # Montar CLI
 
 @app.command()
