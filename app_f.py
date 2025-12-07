@@ -29,14 +29,13 @@ CONFIGS = {
 }
 def ler_html(url):
     try:
-        response = requests.get(url, headers=CONFIGS["SITE_URL"], timeout= 10)
+        response = requests.get(url, headers=CONFIGS["HEADERS_SITE"], timeout=10)
         response.raise_for_status()
-        soup = BeautifulSoup(response.text, "lxml") 
+        soup = BeautifulSoup(response.text, "lxml")
         return soup
     except requests.RequestException as e:
         typer.echo(f"Erro {e} ao aceder a {url}")
         return None
-    
 
 app = typer.Typer(help="CLI de ITjobs")
 # auxiliares
@@ -215,6 +214,7 @@ def get_job_id(job_id: int):
 
     tipos = encontrar_work_type(response.get("description", ""))
     typer.echo("Tipos de trabalho: " + ", ".join(tipos) if tipos else "Nenhum tipo encontrado.")
+    return response
 
    
 def info_empresa(res):
@@ -340,9 +340,9 @@ def search(empresa: str, localidade: str, num: int, csv: bool = typer.Option(Fal
 @app.command()
 def job(job_id: int):
     # Obter detalhes de um job específico por id
-    get_job_id(job_id)
-    res = get_job_id(job_id) 
-    info_empresa(res)
+    res = get_job_id(job_id)
+    if res:
+        info_empresa(res)
 
 @app.command()
 def skills(data_inicial: str, data_final: str):
