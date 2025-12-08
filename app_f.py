@@ -317,7 +317,68 @@ def info_empresa(res):
             for classe in sorted(list(classes_encontradas))[:15]: 
                 typer.echo(f"  • {classe}")
                 
-                   
+
+def job_skills_teamlyzer(job_title_str, top=10):
+    
+    if not job_title_str.strip():
+        return []
+
+    params = {
+        "tags": job_title_str.replace(" ", "-").lower(),
+        "order": "most_relevant",
+    }
+
+    response = requests.get(
+            CONFIGS["TEAMLYZER_JOBS_URL"],
+            params=params,
+            headers=CONFIGS["HEADERS_SITE"],
+            timeout=12
+        )
+
+    if response.status_code != 200:
+        typer.echo(f"Erro HTTP {response.status_code} ao aceder ao Teamlyzer.")
+        return []
+
+    soup = BeautifulSoup(response.text, "html.parser")
+
+    skills = []
+    anchors = soup.find_all("a", href=re.compile(r"^/companies/jobs\?tags="))
+    for a in anchors:
+        text = a.get_text(strip=True)
+        if text:
+            skills.append(text.lower())
+
+    if not skills:
+        candidates = soup.find_all(
+            class_=lambda s: s and ("tag" in s.lower() or "badge" in s.lower() or "job-tags" in s.lower())
+        )
+        for elem in candidates:
+            t = elem.get_text(strip=True)
+            if t:
+                for part in re.split(r"[,/\n]+", t):
+                    p = part.strip()
+                    if p:
+                        skills.append(p.lower())
+
+    if not skills:
+        job_blocks = soup.select("div[class*='job'], div[class*='offer'], article")
+        for jb in job_blocks:
+            texts = re.findall(r"\b[a-zA-Z0-9\-\+\#\.\+]{2,30}\b", jb.get_text(" "))
+            for t in texts:
+                if len(t) > 2:
+                    skills.append(t.lower())
+
+    if not skills:
+        typer.echo("Nenhuma skill encontrada para este trabalho.")
+        return []
+    
+    counter = Counter(skills)
+
+    top_n = counter.most_common(top)
+    output = [{"skill": s, "count": c} for s, c in top_n]
+    return output
+
+
 # Montar CLI
 
 @app.command()
@@ -348,6 +409,19 @@ def job(job_id: int):
 def skills(data_inicial: str, data_final: str):
     # Contar skills mais frequentes entre duas datas
     print(skills_muitos(data_inicial, data_final))
+
+@app.command()
+def teamlyzer_skills():
+    job_title_str = " ".join(job_title_str).strip()
+    if not job_title_str:
+        typer.echo("Fornece um título de trabalho válido.")
+        raise typer.Exit(code=1)
+    resultado = job_skills_teamlyzer(job_title_str, top=top)
+    if not csv:
+        typer.echo(json.dumps(resultado, indent=2, ensure_ascii=False))
+        return
+    else:
+        export_to_csv(job_skills_teamlyzer, "teamlyzer_skills_export.csv")
 
 @app.command()
 def add_skill(skill : str):
