@@ -411,17 +411,20 @@ def skills(data_inicial: str, data_final: str):
     print(skills_muitos(data_inicial, data_final))
 
 @app.command()
-def teamlyzer_skills():
-    job_title_str = " ".join(job_title_str).strip()
-    if not job_title_str:
-        typer.echo("Fornece um título de trabalho válido.")
-        raise typer.Exit(code=1)
-    resultado = job_skills_teamlyzer(job_title_str, top=top)
+@app.command()
+def teamlyzer_skills(
+    job_title_str: List[str] = typer.Argument(...),
+    top: int = typer.Option(10, "--top", help="Número de skills mais frequentes"),
+    csv: bool = typer.Option(False, "--csv", help="Exportar para CSV")
+):
+    job_title = " ".join(job_title_str).strip()
+
+    resultado = job_skills_teamlyzer(job_title, top=top)
+
     if not csv:
         typer.echo(json.dumps(resultado, indent=2, ensure_ascii=False))
-        return
     else:
-        export_to_csv(job_skills_teamlyzer, "teamlyzer_skills_export.csv")
+        export_to_csv(resultado, "teamlyzer_skills_export.csv")
 
 @app.command()
 def add_skill(skill : str):
