@@ -318,6 +318,62 @@ def info_empresa(res):
                 typer.echo(f"  • {classe}")
                 
 
+
+def gerar_estatisticas(export_csv: bool = False):
+    jobs = n_jobs(CONFIGS["MAX_RESULTS"], if_csv=False)
+
+
+    if not jobs:
+        typer.echo("Nenhum trabalho encontrado para gerar estatísticas.")
+        return
+
+
+    contador = Counter()
+
+
+    for job in jobs:
+        # zonas
+        zonas = [loc.get("name", "Desconhecido") for loc in job.get("locations", [])]
+        if not zonas:
+            zonas = ["Desconhecido"]
+
+
+        # tipos de trabalho
+        tipos = encontrar_work_type(job.get("description", ""))
+        if not tipos:
+            tipos = ["desconhecido"]
+
+
+        # contar combinações
+        for zona in zonas:
+            for tipo in tipos:
+                contador[(zona, tipo)] += 1
+
+
+    if export_csv:
+        filename = "estatisticas.csv"
+        try:
+            with open(filename, mode="w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(["Zona", "Tipo de Trabalho", "Nº de vagas"])
+
+
+                for (zona, tipo), count in contador.items():
+                    writer.writerow([zona, tipo, count])
+
+
+            typer.echo("Ficheiro de exportação criado com sucesso.")
+
+
+        except Exception as e:
+            typer.echo(f"Erro ao criar CSV: {e}", err=True)
+
+
+    else:
+        typer.echo("Estatísticas de vagas por zona e tipo de trabalho:")
+        for (zona, tipo), count in contador.items():
+            typer.echo(f"{zona} | {tipo} | {count}")                
+
 def job_skills_teamlyzer(job_title_str, top=10):
     
     if not job_title_str.strip():
@@ -411,6 +467,9 @@ def skills(data_inicial: str, data_final: str):
     print(skills_muitos(data_inicial, data_final))
 
 @app.command()
+def estatisticas(export_csv: bool = typer.Option(False, "--csv", help="Exportar resultados para CSV")):
+    gerar_estatisticas(export_csv)
+
 @app.command()
 def teamlyzer_skills(
     job_title_str: List[str] = typer.Argument(...),
