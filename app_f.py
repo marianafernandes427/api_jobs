@@ -316,20 +316,16 @@ def info_empresa(res):
             typer.echo(f"Classes CSS encontradas (total: {len(classes_encontradas)}):")
             for classe in sorted(list(classes_encontradas))[:15]: 
                 typer.echo(f"  • {classe}")
-                
+
 
 
 def gerar_estatisticas(export_csv: bool = False):
     jobs = n_jobs(CONFIGS["MAX_RESULTS"], if_csv=False)
 
-
     if not jobs:
         typer.echo("Nenhum trabalho encontrado para gerar estatísticas.")
         return
-
-
     contador = Counter()
-
 
     for job in jobs:
         # zonas
@@ -337,18 +333,15 @@ def gerar_estatisticas(export_csv: bool = False):
         if not zonas:
             zonas = ["Desconhecido"]
 
-
         # tipos de trabalho
         tipos = encontrar_work_type(job.get("description", ""))
         if not tipos:
             tipos = ["desconhecido"]
 
-
         # contar combinações
         for zona in zonas:
             for tipo in tipos:
                 contador[(zona, tipo)] += 1
-
 
     if export_csv:
         filename = "estatisticas.csv"
@@ -357,17 +350,13 @@ def gerar_estatisticas(export_csv: bool = False):
                 writer = csv.writer(f)
                 writer.writerow(["Zona", "Tipo de Trabalho", "Nº de vagas"])
 
-
                 for (zona, tipo), count in contador.items():
                     writer.writerow([zona, tipo, count])
 
-
             typer.echo("Ficheiro de exportação criado com sucesso.")
-
 
         except Exception as e:
             typer.echo(f"Erro ao criar CSV: {e}", err=True)
-
 
     else:
         typer.echo("Estatísticas de vagas por zona e tipo de trabalho:")
@@ -507,6 +496,7 @@ Comandos disponíveis:
  search EMPRESA LOCAL N [--csv] - Listar jobs part-time por empresa e localidade.
  type JOBID                     - Extrair tipo de trabalho de um job.
  skills DATA_INICIAL DATA_FINAL - Contar skills entre datas.
+ estatisticas [--csv]           - Gerar estatísticas das zonas dos jobs
  add_skill [skill]              - Adiciona uma skill à lista de skills           
 """)
     
