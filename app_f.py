@@ -16,6 +16,7 @@ CONFIGS = {
     "API_KEY": "b0e317cc2b42bdde2c5d7bdd73db79c4",
     "BASE_URL": "https://api.itjobs.pt/job",
     "SITE_URL" : "https://pt.teamlyzer.com/companies/",
+    "TEAMLYZER_JOBS_URL" : "https://pt.teamlyzer.com/companies/job/",
     "MAX_RESULTS": 300,
 
     "HEADERS": {
@@ -497,6 +498,7 @@ Comandos disponíveis:
  type JOBID                     - Extrair tipo de trabalho de um job.
  skills DATA_INICIAL DATA_FINAL - Contar skills entre datas.
  estatisticas [--csv]           - Gerar estatísticas das zonas dos jobs
+ teamlyzer-skills [--csv]       - Lista as principais skills de determinado job.
  add_skill [skill]              - Adiciona uma skill à lista de skills           
 """)
     
