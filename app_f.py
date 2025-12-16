@@ -304,21 +304,6 @@ def info_empresa(res):
         if not beneficios_encontrados:
             typer.echo(f"Não foram encontrados benefícios específicos para {nome_empresa}")
             
-            # Debug (retirar dps)
-            typer.echo("\n[DEBUG] Estrutura da página encontrada:")
-            typer.echo(f"Título da página: {soup.title.string if soup.title else 'Sem título'}")
-            
-            # Mostrar algumas das soluções possíveis
-            classes_encontradas = set()
-            for tag in soup.find_all(class_=True):
-                classes = tag.get("class", [])
-                classes_encontradas.update(classes)
-            
-            typer.echo(f"Classes CSS encontradas (total: {len(classes_encontradas)}):")
-            for classe in sorted(list(classes_encontradas))[:15]: 
-                typer.echo(f"  • {classe}")
-
-
 
 def gerar_estatisticas(export_csv: bool = False):
     jobs = n_jobs(CONFIGS["MAX_RESULTS"], if_csv=False)
