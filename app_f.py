@@ -484,7 +484,8 @@ Comandos disponíveis:
  skills DATA_INICIAL DATA_FINAL - Contar skills entre datas.
  estatisticas [--csv]           - Gerar estatísticas das zonas dos jobs
  teamlyzer-skills [--csv]       - Lista as principais skills de determinado job.
- add_skill [skill]              - Adiciona uma skill à lista de skills           
+ add_skill [skill]              - Adiciona uma skill à lista de skills  
+ job [job-id]                   -Permite mostrar os detalhes de uma vaga específica pelo ID e da empresa\n
 """)
     
 if __name__ == "__main__":
